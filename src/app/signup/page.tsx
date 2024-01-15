@@ -1,28 +1,53 @@
 "use client";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { axios } from "axios";
+import axios  from "axios";
+import toast from "react-hot-toast";
+import { loadGetInitialProps } from "next/dist/shared/lib/utils";
 
 
 
 export default function SigninPage() {
+    const  router = useRouter();
     const [user, setUser] = React.useState({
         email: "",
         password: "",
         username:"",
     })
 
+    const [buttonDisabled,setButtonDisabled] = React.useState(false)
+    const [loading,setLoding]= React.useState(false)
+
+
     const onSignup = async() =>{
-        
+        try {
+            setLoding(true);
+            const response = await axios.post('/api/users/signup', user);
+            console.log("Signup Success", response.data);
+            router.push("/login")
+        } catch (error: any) {
+            console.log('Signup failed',error.message)
+            toast.error(error.message);
+        }finally {
+            setLoding(false)
+        }
     }
 
+
+    useEffect(() => {
+        if (user.email.length > 0 && user.password.length > 0 && user.username.length > 0) {
+            setButtonDisabled(false);
+        } else {
+            setButtonDisabled(true)
+        }
+    },[user])
     
 
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen py-2">
-            <h1>Signup</h1>
+            <h1>{loading?"Processing":"Signup" }</h1>
             <hr />
             <label htmlFor="username">username</label>
             <input
@@ -53,7 +78,7 @@ export default function SigninPage() {
             />
             <button
             onClick={onSignup}
-                className="p-2 border boreder-grey-300 rounded-lg mb-4">Signup here</button>
+                className="p-2 border boreder-grey-300 rounded-lg mb-4">{buttonDisabled? "No signup" :"signup" }</button>
             <Link href="/login">Login</Link>
         </div>
     )
